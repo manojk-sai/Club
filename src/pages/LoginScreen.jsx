@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { api } from "../api/client";
+import { ApiError, api } from "../api/client";
 import { S } from "../styles/theme";
 import { Input } from "../components/ui/Input";
 import Spinner from "../components/ui/Spinner";
@@ -10,18 +10,24 @@ export function LoginScreen({ onLogin, onGoRegister }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!username || !password) { setError("Please fill in all fields."); return; }
-    setError(""); setLoading(true);
+    setError("");
+    setFieldErrors({});
+    setLoading(true);
     try {
       const data = await api.login(username, password);
       const token = data.token || data.accessToken || data.jwt;
       const currentUser = await api.getCurrentUser(token);
       onLogin(token, currentUser);
     } catch (err) {
-      setError(err.message);
+      if (err instanceof ApiError) {
+        setFieldErrors(err.fieldErrors || {});
+      }
+      setError(err.message || "Unable to sign in right now.");
     } finally {
       setLoading(false);
     }
@@ -46,8 +52,8 @@ export function LoginScreen({ onLogin, onGoRegister }) {
           {error && <div style={S.error}>{error}</div>}
 
           <form onSubmit={handleSubmit}>
-            <Input label="Username" type="text" value={username} onChange={setUsername} placeholder="Your username" autoFocus />
-            <Input label="Password" type="password" value={password} onChange={setPassword} placeholder="Your password" />
+            <Input label="Username" type="text" value={username} onChange={setUsername} placeholder="Your username" error={fieldErrors.username} autoFocus />
+            <Input label="Password" type="password" value={password} onChange={setPassword} placeholder="Your password" error={fieldErrors.password} />
             <div style={{ height: 8 }} />
             <button type="submit" style={S.btnPrimary} disabled={loading}>
               {loading ? <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}><Spinner /> Signing in…</span> : "Sign in"}
