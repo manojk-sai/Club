@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: sahayatra
+  data:
+    mongodb:
+      uri: "mongodb+srv://root:root@cluster0.zm113pl.mongodb.net/?appName=Cluster0"
+      database: "sahayatra"
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+  task:
+    execution:
+      pool:
+        core-size: 4
+        max-size: 16
+        queue-capacity: 100
+      thread-name-prefix: trip-async-
+security:
+  jwt:
+    secret-key: "security123456789123456987789456123enoughmanojsairootkey"
+    expiration-time: 36000000
+weather:
+  api:
+    key: "1de9e05842a5420b18de7e50383ba3e4"
+    url: "http://api.openweathermap.org/data/2.5/weather"
