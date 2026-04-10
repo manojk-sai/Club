@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { api } from "../api/client";
+import { ApiError, api } from "../api/client";
 import { S } from "../styles/theme";
 import { Input } from "../components/ui/Input";
 import { AuthLeft } from "../components/auth/AuthLeft";
@@ -19,6 +19,14 @@ export function RegisterScreen({ onLogin, onGoLogin }) {
 
   const set = (k) => (v) => setForm(f => ({ ...f, [k]: v }));
 
+  const mapBackendErrors = (fieldErrors = {}) => ({
+    username: fieldErrors.username,
+    password: fieldErrors.password,
+    fullname: fieldErrors.fullName,
+    city: fieldErrors.city,
+    zipcode: fieldErrors.zipCode,
+  });
+
   const validate = () => {
     const e = {};
     if (!form.username) e.username = "Username is required";
@@ -36,21 +44,23 @@ export function RegisterScreen({ onLogin, onGoLogin }) {
     setErrors(e2);
     if (Object.keys(e2).length) return;
 
-    setApiError(""); 
+    setApiError("");
+    setErrors({});
     setLoading(true);
     try {
-      // Sending data to your POST /auth/register endpoint
-      const data = await api.register( {
+      const data = await api.register({
         username: form.username,
         password: form.password,
-        fullname: form.fullname,
+        fullName: form.fullname,
         city: form.city,
-        zipcode: form.zipcode,
+        zipCode: form.zipcode,
       });
-      // Auto-login after successful registration
       onLogin(data.token || data.jwt, data.user || { username: form.username });
     } catch (err) {
-      setApiError(err.message);
+      if (err instanceof ApiError) {
+        setErrors(prev => ({ ...prev, ...mapBackendErrors(err.fieldErrors) }));
+      }
+      setApiError(err.message || "Unable to create account right now.");
     } finally {
       setLoading(false);
     }
@@ -75,9 +85,9 @@ export function RegisterScreen({ onLogin, onGoLogin }) {
 
           <form onSubmit={handleSubmit}>
             <Input label="Username" value={form.username} onChange={set("username")} placeholder="johndoe" error={errors.username} autoFocus />
-            <Input label="Full Name (Optional)" value={form.fullname} onChange={set("fullname")} placeholder="John Doe" />
+            <Input label="Full Name (Optional)" value={form.fullname} onChange={set("fullname")} placeholder="John Doe" error={errors.fullname} />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-              <Input label="City (Optional)" value={form.city} onChange={set("city")} placeholder="New York" />
+              <Input label="City (Optional)" value={form.city} onChange={set("city")} placeholder="New York" error={errors.city} />
               <Input label="Zipcode" value={form.zipcode} onChange={set("zipcode")} placeholder="10001" error={errors.zipcode} />
             </div>
 

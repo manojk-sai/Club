@@ -1,5 +1,24 @@
 const API_BASE = "http://localhost:8080";
 
+export class ApiError extends Error {
+  constructor(message, status, fieldErrors = {}) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.fieldErrors = fieldErrors;
+  }
+}
+
+function normalizeError(data, status) {
+  const fieldErrors = data?.errors && typeof data.errors === "object" ? data.errors : {};
+  const message =
+    data?.message ||
+    data?.detail ||
+    data?.error ||
+    (Object.keys(fieldErrors).length ? "Please correct the highlighted fields." : `Error ${status}`);
+  return new ApiError(message, status, fieldErrors);
+}
+
 async function request(method, path, body, token) {
   const headers = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -9,7 +28,7 @@ async function request(method, path, body, token) {
     body: body ? JSON.stringify(body) : undefined,
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.message || data.error || `Error ${res.status}`);
+  if (!res.ok) throw normalizeError(data, res.status);
   return data;
 }
 
@@ -110,7 +129,7 @@ export const api = {
       method: "PATCH",
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok && res.status !== 204) throw new Error(`Error ${res.status}`);
+    if (!res.ok && res.status !== 204) throw new ApiError(`Error ${res.status}`, res.status);
   },
 
   async markAllNotificationsRead(token) {
@@ -118,7 +137,7 @@ export const api = {
       method: "PATCH",
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok && res.status !== 204) throw new Error(`Error ${res.status}`);
+    if (!res.ok && res.status !== 204) throw new ApiError(`Error ${res.status}`, res.status);
   },
 
   // ── Phase 5: Itinerary ───────────────────────────────
