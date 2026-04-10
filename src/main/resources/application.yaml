@@ -3,7 +3,7 @@ spring:
     name: sahayatra
   data:
     mongodb:
-      uri: "mongodb+srv://root:root@cluster0.zm113pl.mongodb.net/?appName=Cluster0"
+      uri: ""
       database: "sahayatra"
   jackson:
     default-property-inclusion: non_null
@@ -18,9 +18,9 @@ spring:
       thread-name-prefix: trip-async-
 security:
   jwt:
-    secret-key: "security123456789123456987789456123enoughmanojsairootkey"
+    secret-key: ""
     expiration-time: 36000000
 weather:
   api:
-    key: "1de9e05842a5420b18de7e50383ba3e4"
+    key: ""
     url: "http://api.openweathermap.org/data/2.5/weather"
